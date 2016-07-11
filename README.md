@@ -1,2 +1,3 @@
-# slack-notes-command
-Handle backend for a Slack command notes service. It allows to take notes from different users, in different channels.
+# Slack Notes Command
+Slack command /notes. It allows to take notes from users on different teams & channels.
+Built using RESTful API in Lumen, a Laravel micro framework. 
