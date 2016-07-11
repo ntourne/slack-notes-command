@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Note;
 use Illuminate\Http\Request;
 
 /*
@@ -33,6 +34,33 @@ $app->get('/', function () use ($app) {
 $app->post('api/v1/notes', function(Request $request) use ($app) {
 
     $text = $request->input('text');
-    echo "You send this text: " . $text;
+
+    // if no param, empty
+    if ($text == null)
+        return response()->json('Error: No text');
+
+    // if text is "list", return list of Notes
+    else if ($text == "list") {
+        $notes = Note::where('user_id', '3')
+                        ->where('channel_id', '2')
+                        ->orderBy('created_at', 'desc')
+                        ->take(10)
+                        ->get();
+       return response()->json($notes);
+    }
+
+    // save a new note
+    else {
+        $note = new Note();
+        $note->team_id = $request->input('team_id');
+        $note->channel_id = $request->input('channel_id');
+        $note->user_id = $request->input('user_id');
+        $note->text = $request->input('text');
+
+        if ($note->save())
+            return response()->json($note);
+        else
+            return response()->json("Error: Saving note");
+    }
 
 });
