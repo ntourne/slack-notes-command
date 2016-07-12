@@ -39,22 +39,61 @@ $app->post('api/v1/notes', function(Request $request) use ($app) {
     if ($text == null)
         return response()->json('Error: No text');
 
+    // convert text as array
+    $text = explode(' ', $text);
+
     // if text is "list", return list of Notes
-    else if ($text == "list") {
-        $notes = Note::where('user_id', '3')
-                        ->where('channel_id', '2')
-                        ->orderBy('created_at', 'desc')
-                        ->take(10)
-                        ->get();
-       return response()->json($notes);
+    if ($text[0] == "list") {
+
+        // parse params
+        $q_param = [];
+        $by_param = NULL;
+
+        if (count($text) > 1) {
+            for ($i = 1; $i < count($text); $i++) {
+                // reported by
+                if (substr($text[$i], 0, 3) === "by:")
+                    $by_param = explode(':', $text[$i])[1];
+
+                // $query
+                else
+                    $q_param[] = $text[$i];
+            }
+        }
+
+        // create new query
+        $query = Note::select();
+
+        // filter by note text
+        if (count($q_param) > 0) {
+            for ($i = 0; $i < count($q_param); $i++)
+                $query->where('text', 'LIKE', '%' . $q_param[$i] . '%');
+        }
+
+        // filter by author
+        if ($by_param)
+            $query->where('user_name', $by_param);
+
+        // filter by channel
+        if ($request->input('channel_id'))
+            $query->where('channel_id', $request->input('channel_id'));
+
+        $query->orderBy('created_at', 'desc');
+        $query->take(10);
+        $notes = $query->get();
+
+        return response()->json($notes);
     }
 
     // save a new note
     else {
         $note = new Note();
         $note->team_id = $request->input('team_id');
+        $note->team_domain = $request->input('team_domain');
         $note->channel_id = $request->input('channel_id');
+        $note->channel_name = $request->input('channel_name');
         $note->user_id = $request->input('user_id');
+        $note->user_name = $request->input('user_name');
         $note->text = $request->input('text');
 
         if ($note->save())
