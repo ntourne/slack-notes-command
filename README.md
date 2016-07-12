@@ -11,4 +11,4 @@ Built using RESTful API in Lumen, a Laravel micro framework.
 - `/notes feedback I like this thing` - just send us a feedback note :-)
 
 
-### *** Project in progress. Still no official version ***
+### *** Project in progress. Still no working version ***
