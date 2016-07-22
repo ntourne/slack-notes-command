@@ -23,12 +23,17 @@ class NotesController extends Controller {
         // convert text as array
         $text = explode(' ', $text);
 
-        // if text is "list", return list of Notes
+        // if "list", return list of notes
         if ($text[0] == "list")
             return $this->listing($text, $request);
 
+        // if "clear", destroy all notes
+        else if ($text[0] == "clear")
+            return $this->clear($text, $request);
+
+        // at the end, just create the note
         else
-            return $this->create($text, $request);
+            return $this->create($request);
     }
 
 
@@ -81,13 +86,37 @@ class NotesController extends Controller {
     }
 
 
+
+    /**
+     * Clear notes from one channel
+     * @param  array $text
+     * @param  Request $request
+     * @return JSON
+     */
+    private function clear($text, $request) {
+
+        // if "--force" option, then remove
+        if ( (count($text) > 1) && ($text[1] == '--force') ) {
+            Note::where('team_id', $request->team_id)
+                ->where('channel_id', $request->channel_id)
+                ->delete();
+            return response()->json("Done. I've clear all notes");
+        }
+
+        // if not "--force" option, return warning message
+        else
+            return response()->json("Are you sure to remove all notes? This cannot be undone. If sure, call this `/notes clear --force`");
+
+    }
+
+
     /**
      * Create new note
      * @param  array $text
      * @param  Request $request
      * @return JSON
      */
-    private function create($text, $request) {
+    private function create($request) {
         $note = new Note();
         $note->team_id = $request->input('team_id');
         $note->team_domain = $request->input('team_domain');
@@ -95,7 +124,7 @@ class NotesController extends Controller {
         $note->channel_name = $request->input('channel_name');
         $note->user_id = $request->input('user_id');
         $note->user_name = $request->input('user_name');
-        $note->text = $text;
+        $note->text = $request->input('text');
 
         if ($note->save())
             return response()->json($note);
